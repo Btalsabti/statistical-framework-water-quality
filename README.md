@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1160528665.svg)](https://doi.org/10.5281/zenodo.19327592)
+
 # A Decision Framework for Reproducible Statistical Analysis in Water Quality Assessment
 ## Overview
 An **interactive statistical decision-tree framework** has been developed to guide the selection of appropriate statistical methods for reproducible water quality assessment and hydrochemical analysis. It is designed to assist researchers, students, and environmental scientists in navigating statistical analysis workflows commonly used in water and environmental studies.
