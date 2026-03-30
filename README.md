@@ -19,7 +19,7 @@ The web application allows users to:
 
 - Explore the statistical decision tree interactively  
 - Select statistical methods using the **Quick Method Selector**
-- Step wise statistical method selection starting from sample size and normality checks.
+- Step-wise statistical method selection starting from sample size and normality checks.
 - View descriptions, interpretations, limitations, and references for each method  
 - Export visual representations of the statistical framework  
 - Switch between **light and dark visualization modes**
@@ -52,12 +52,7 @@ https://github.com/Btalsabti/statistical-framework-water-quality.git
 
 ## Authors
 
-Bedour Alsabti¹  
-Todd Robinson¹  
-Chidambaram Sabarathinam²  
-Prasanna Mohan Viswanathan³  
-Domenik Wolff-Boenisch¹  
-
+Bedour Alsabti¹; Todd Robinson¹; Chidambaram Sabarathinam²; Prasanna Mohan Viswanathan³; Domenik Wolff-Boenisch¹  
 ¹ School of Earth and Planetary Sciences, Curtin University, Perth, Australia  
 ² Water Research Center, Kuwait Institute for Scientific Research, Kuwait  
 ³ Faculty of Engineering and Science, Curtin University, Miri, Malaysia  
@@ -67,5 +62,5 @@ Domenik Wolff-Boenisch¹
 ## License
 
 This project is intended for **academic and research use**.  
-Please cite the associated publication when using this framework in research.
+Kindly cite the associated publication when using this framework in research.
 
