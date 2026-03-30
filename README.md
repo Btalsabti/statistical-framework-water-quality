@@ -1,5 +1,4 @@
-# Statistical Framework for Water Quality Assessment
-
+# A Decision Framework for Reproducible Statistical Analysis in Water Quality Assessment
 ## Overview
 This repository contains the source code for an **interactive statistical decision-tree framework** developed to guide researchers in selecting appropriate statistical methods for water quality assessment and hydrochemical analysis.
 
@@ -18,7 +17,8 @@ https://statistical-framework-water-quality.onrender.com
 The web application allows users to:
 
 - Explore the statistical decision tree interactively  
-- Select statistical methods using the **Quick Method Selector**  
+- Select statistical methods using the **Quick Method Selector**
+- Step wise statistical method selection starting from sample size and normality checks.
 - View descriptions, interpretations, limitations, and references for each method  
 - Export visual representations of the statistical framework  
 - Switch between **light and dark visualization modes**
