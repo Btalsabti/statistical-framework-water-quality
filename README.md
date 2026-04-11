@@ -38,7 +38,7 @@ The web application allows users to:
 
 The interactive statistical framework was developed as part of a research study on statistical approaches for water quality assessment.
 
-The interactive tool is provided as **Supplementary Material (S1)** accompanying the manuscript.
+The interactive tool is provided as **Supplementary Material (S3)** accompanying the manuscript.
 
 ---
 
