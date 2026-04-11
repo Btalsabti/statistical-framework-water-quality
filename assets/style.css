@@ -1,0 +1,19 @@
+/* Main info panel box */
+#info-container {
+    width: 450px;            /* ← Reduce this to make the panel smaller */
+    max-width: 450px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    max-height: 80vh;        /* Prevent it from going off screen */
+    box-sizing: border-box;
+}
+
+/* Resize images to fit inside the panel */
+#info-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+}

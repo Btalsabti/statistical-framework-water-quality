@@ -5,6 +5,10 @@
 #  Prepared for scientific publication + extendable by the author.
 #  *** EVERY SECTION IS EXPLAINED SO YOU CAN MODIFY IT EASILY ***
 # ========================================================================
+# To open the dash terminal run the full script. Press control+C to close it and return you back to main terminal.
+# ========================================================================
+
+#LIBRARIES 
 
 import dash
 from dash import html, Input, Output, dcc
@@ -25,652 +29,609 @@ app = dash.Dash(
 server = app.server   # ⭐ REQUIRED FOR RENDER ⭐
 
 
-# ==========================================
-# Statistical method legend (navigation only)
-# ==========================================
+# ========================================================================
+# PART 2 — TREE ORGANISATION
+# ========================================================================
+# This section is now split into:
+#   A. METHOD_GROUPS     → controls the dropdown navigation
+#   B. STRUCTURAL_NODES  → non-method tree labels
+#   C. TREE_* sections   → actual tree branches
+#
+# To edit the tree:
+#   - add/remove branches inside TREE_* dictionaries
+#   - keep node names EXACTLY the same everywhere
+# ========================================================================
+
+# ------------------------------------------
+# A. Statistical method legend / navigation
+# ------------------------------------------
 METHOD_GROUPS = {
     "Univariate": [
+        "Univariate normality test",
         "Shapiro–Wilk",
         "Kolmogorov–\nSmirnov",
-        "Q–Q Plot",
-        "Histogram"
     ],
     "Bivariate": [
         "Pearson's correlation",
         "Spearman's correlation"
     ],
     "Multivariate": [
+        "Multivariate normality test",
         "Principal Component\nAnalysis",
         "Factor Analysis",
         "Hierarchical\nCluster Analysis",
-        "PMF"
+        "Positive Matrix\nFactorization",
+        "Discriminant Analysis"
     ]
 }
 
-# ==========================================
-# Legend panel
-# ==========================================
-def method_selector():
-        return html.Div(
-            id="method-selector-box",
-            style={
-                "border": "1px solid #ccc",
-                "borderRadius": "8px",
-                "padding": "10px",
-                "marginBottom": "10px"
-            },
-        children=[
-            html.Div("Quick method selector", style={"fontWeight": "bold"}),
+# ------------------------------------------
+# B. Structural / navigation-only nodes
+# ------------------------------------------
+STRUCTURAL_NODES = {
+    "root",
+    "Exploratory Analysis",
+    "Data size",
+    "Normality Tests",
+    "Univariate normality test",
+    "Multivariate normality test",
+    "Univariate Graphical",
+    "Univariate Formal",
+    "Multivariate Graphical",
+    "Multivariate Formal",
+    "Bivariate tests N",
+    "Bivariate tests NN",
+    "Multivariate tests N",
+    "Multivariate tests NN",
+    "p ≥ 0.05\nNormal",
+    "p < 0.05\nNot Normal",
+    "n < 100",
+    "n > 100",
+    "Box Plot",
+    "Dot Plot",
+    "Multivariate Normal",
+    "Multivariate Not Normal",
+}
 
-            dcc.Dropdown(
-                id="method-group",
-                options=[{"label": k, "value": k} for k in METHOD_GROUPS],
-                placeholder="Select analysis level (Univariate / Bivariate / Multivariate)",
-                style={"marginBottom": "8px"}
-            ),
+# ------------------------------------------
+# C. Tree branches
+# ------------------------------------------
 
-            dcc.Dropdown(
-                id="method-name",
-                placeholder="Select method",
-            )
-        ]
-    )
-# ========================================================================
-# PART 2 — DECISION TREE STRUCTURE (MAIN HIERARCHY)
-# ========================================================================
-# 🎯 THIS IS WHERE YOU MODIFY THE TREE ITSELF
-#
-# Left side  = parent node
-# Right side = list of children nodes
-#
-# To add new branches:
-#   tree["Your Node"] = ["Child 1", "Child 2", ...]
-#
-# To add new tests:
-#   Add them under the branch where they belong.
-#
-# ⚠️ The node name MUST be unique.
-# ========================================================================
-
-tree = { 
-    "root": ["Exploratory Analysis"],
-
-    # ------------------- STEP 1 -------------------
+TREE_ROOT = {
     "Exploratory Analysis": ["Data size"],
+    "Data size": ["n < 100", "n > 100"],
+}
 
-    "Data size": ["50 - 100", "> 100"],
+TREE_UNIVARIATE = {
+    "n < 100": ["Normality Tests"],
+    "Normality Tests": ["Univariate normality test", "Multivariate normality test"],
 
-    # ------------------- IF SAMPLE SIZE 50–100 -------------------
-    "50 - 100": ["Normality Tests"],
-
-    "Normality Tests": [
-        "Univariate normality test",
-        "Multivariate normality test"
-    ],
-
-# ------------------- UNIVARIATE NORMALITY -------------------
     "Univariate normality test": ["Univariate Graphical", "Univariate Formal"],
+    "Univariate Graphical": ["Q–Q Plot", "Histogram", "Box Plot", "Dot Plot"],
+    "Univariate Formal": ["Shapiro–Wilk", "Kolmogorov–\nSmirnov"],
 
-    "Univariate Graphical": [
-        "Q–Q Plot", 
-        "Histogram", 
-        "Box Plot", 
-        "Dot Plot"
-    ],
-
-    "Univariate Formal": [
-        "Shapiro–Wilk",
-        "Kolmogorov–\nSmirnov",
-    ],
-
-    # ------------------- FORMAL TEST RESULTS -------------------
     "Shapiro–Wilk": ["p ≥ 0.05\nNormal", "p < 0.05\nNot Normal"],
-    "Kolmogorov–Smirnov": ["p ≥ 0.05\nNormal", "p < 0.05\nNot Normal"],
-  
-    # Add missing node definitions (IMPORTANT)
-    "p ≥ 0.05\nNormal": [
-        #"Pearson's correlation",
-        "Bivariate tests N",
-        "Multivariate tests N",
-        #"t-test",
-        #"ANOVA",
-        #"Simple linear regression"
-    ],
-    "p < 0.05\nNot Normal": [
-        #"Spearman's correlation",
-        "Bivariate tests NN",
-        "Multivariate tests NN",
-        #"Mann–Whitney U test",
-       # "Kruskal–Wallis",
-        #"PMF"
-    ],
+    "Kolmogorov–\nSmirnov": ["p ≥ 0.05\nNormal", "p < 0.05\nNot Normal"],
+}
 
-    # ---------------- MULTIVARIATE -----------------
+TREE_MULTIVARIATE = {
     "Multivariate normality test": ["Multivariate Graphical", "Multivariate Formal"],
+    "Multivariate Graphical": ["Gamma Plot", "Chi-Square Q–Q Plot", "Multivariate Q–Q Plot"],
+    "Multivariate Formal": ["Mardia’s skewness", "Mardia’s kurtosis"],
 
-    "Multivariate Graphical": [
-        "Gamma Plot",
-        "Chi-Square Q–Q Plot",
-        "Multivariate Q–Q Plot"
-    ],
-
-    "Multivariate Formal": [
-        "Mardia’s skewness",
-        "Mardia’s kurtosis",
-    ],
-
-    # Multivariate normality test results
     "Mardia’s skewness": ["p ≥ 0.05\nNormal", "p < 0.05\nNot Normal"],
     "Mardia’s kurtosis": ["p ≥ 0.05\nNormal", "p < 0.05\nNot Normal"],
+}
 
-    # Add missing node definitions
-    "Multivariate Normal": [
-        "Principal Component\nAnalysis",
-        "Factor Analysis",
-        "Discriminant Analysis",
-        "Hierarchical\nCluster Analysis",
-    ],
+TREE_RESULTS = {
+    "p ≥ 0.05\nNormal": ["Bivariate tests N", "Multivariate tests N"],
+    "p < 0.05\nNot Normal": ["Bivariate tests NN", "Multivariate tests NN"],
 
-    "Multivariate Not Normal": [
-        "PMF",
-        "Robust PCA",
-        "K-means Clustering",
-        "Nonparametric Discriminant Analysis"
-    ],
-    
-    "Bivariate tests NN": [
-        "Spearman's correlation",
-    ],
-    "Multivariate tests NN": [
-        "PMF",
-    ],    
-    
-    # ------------------- IF SAMPLE SIZE > 100 -------------------
-    "> 100": ["Bivariate tests N", "Multivariate tests N"],
-
-    "Bivariate tests N": [
-        "Pearson's correlation",
-    ],
+    "Bivariate tests N": ["Pearson's correlation"],
+    "Bivariate tests NN": ["Spearman's correlation"],
 
     "Multivariate tests N": [
         "Principal Component\nAnalysis",
         "Factor Analysis",
         "Discriminant Analysis",
         "Hierarchical\nCluster Analysis",
-        "PMF"
-    ]
+        "Positive Matrix\nFactorization"
+    ],
+    "Multivariate tests NN": [
+        "Positive Matrix\nFactorization"
+    ],
 }
 
+TREE_LARGE_SAMPLE = {
+    "n > 100": ["Bivariate tests N", "Multivariate tests N"]
+}
+
+# ------------------------------------------
+# Final combined tree
+# ------------------------------------------
+tree = {}
+for section in [
+    TREE_ROOT,
+    TREE_UNIVARIATE,
+    TREE_MULTIVARIATE,
+    TREE_RESULTS,
+    TREE_LARGE_SAMPLE,
+]:
+    tree.update(section)
+
 # ========================================================================
-# PART 2B — DETAILS FOR INFO PANEL (TABS)
+# PART 2B — METHOD INFORMATION
 # ========================================================================
-# 🎯 Each test can have:
-#     - Description
-#     - Formula
-#     - Rules
-#     - Interpretation
-#     - Example
-#     - Citation
-#     - Image (stored inside /assets/)
+# This section is now standardised.
 #
-# To ADD NEW TEST DETAILS:
-#   node_details["Your Test"] = { ... }
+# To add a new method:
+#   1. Add its node name in the tree
+#   2. Add its content below using make_method(...)
 #
-# To MODIFY FORMULAS / TEXTS / RULES:
-#   Edit the dictionary below.
+# Standard fields:
+#   - description
+#   - interpretation
+#   - limitations
+#   - citation
+#   - image
+#   - formula
+#   - example
 # ========================================================================
+
+def make_method(
+    description="",
+    interpretation="",
+    limitations="",
+    citation="",
+    image="",
+    formula="",
+    example="",
+):
+    return {
+        "description": description,
+        "interpretation": interpretation,
+        "limitations": limitations,
+        "citation": citation,
+        "image": image,
+        "formula": formula,
+        "example": example,
+    }
 
 node_details = {
 
+    # --------------------------------------------------------------------
+    # n > 100
+    # --------------------------------------------------------------------
+    "n > 100": make_method(
+        description=(
+            "Based on the Central Limit Theorem, the sampling distribution "
+            "of the mean tends to approach normality for large sample sizes "
+            "(n > 100)."
+        ),
+        interpretation=(
+            "• Large sample sizes often support the use of parametric methods more easily\n"
+            "• However, assumption checks may still be needed depending on the method"
+        ),
+        limitations=(
+            "• A large sample size does not automatically mean all variables are normally distributed\n"
+            "• Multivariate methods may still require additional assumption checks"
+        ),
+        citation="Cao et al. (2024).",
+        image="_"
+    ),
 
     # --------------------------------------------------------------------
-    # > 100
+    # Shapiro–Wilk
     # --------------------------------------------------------------------
-    "> 100": {
-        "description": "Based on the Central Limit Theorem which explaines that the sampling distribution of the mean"
-        " tends to be normal for large samples (n > 100)",
-        "formula": "-",
-        "rules": [
-            "-",
-        ],
-        "interpretation": [
-            "-",
-            "-"
-        ],
-        "example": "-",
-        "citation": "Cao et al. (2024)",
-        "image": "shapiro.png"
-    },
-
-    # --------------------------------------------------------------------
-    # EXAMPLE 1 — SHAPIRO-WILK
-    # --------------------------------------------------------------------
-    "Shapiro–Wilk": {
-        "description": "Best normality test for small samples (n < 50). Very sensitive to tail deviations.",
-        "formula": r"W = \frac{(\sum a_i x_{(i)})^2}{\sum (x_i - \bar{x})^2}",
-        "interpretation": (
+    "Shapiro–Wilk": make_method(
+        description="Best normality test for small samples (n < 50). Very sensitive to tail deviations.",
+        interpretation=(
             "• p < 0.05 → data significantly deviates from normality\n"
-            "• p ≥ 0.05 → normality cannot be rejected\n"
+            "• p ≥ 0.05 → normality cannot be rejected"
         ),
-        "limitations": (
+        limitations=(
             "• Very sensitive to outliers\n"
-            "• Not suitable for large samples (n > 2000)\n"
-            "• Assumes continuous data\n"
+            "• Not suitable for very large samples (n > 2000)\n"
+            "• Assumes continuous data"
         ),
-        "example": "Example: n = 25 gives p = 0.03 → not normally distributed.",
-        "citation": "Shapiro & Wilk (1965). Biometrika.",
-        "image": "shapiro.png"
-    },
-    
+        formula=r"W = \frac{(\sum a_i x_{(i)})^2}{\sum (x_i - \bar{x})^2}",
+        example="Example: n = 25 gives p = 0.03 → not normally distributed.",
+        citation="Shapiro & Wilk (1965). Biometrika.",
+        image="Shapirowilk_1965_eq.png"
+    ),
+
     # --------------------------------------------------------------------
-    # Kolmogorov–\n Smirnov
+    # Kolmogorov–Smirnov
     # --------------------------------------------------------------------
-    "Kolmogorov–\nSmirnov": {
-        "description": (
-        "The Kolmogorov–Smirnov (K–S) test compares the empirical distribution "
-        "of sample data to a reference distribution (commonly normal). It is "
-        "less powerful than Shapiro–Wilk for small sample sizes but useful for "
-        "general goodness-of-fit testing."
+    "Kolmogorov–\nSmirnov": make_method(
+        description=(
+            "The Kolmogorov–Smirnov (K–S) test compares the empirical distribution "
+            "of sample data to a reference distribution (commonly normal). It is "
+            "less powerful than Shapiro–Wilk for small sample sizes but useful for "
+            "general goodness-of-fit testing."
         ),
-        "interpretation": (
+        interpretation=(
             "• Measures the maximum difference between empirical and theoretical CDF\n"
             "• p < 0.05 → distribution differs significantly from the normal distribution\n"
-            "• Works for medium to large samples\n"
+            "• Works for medium to large samples"
         ),
-        "limitations": (
+        limitations=(
             "• Low power for small samples\n"
-            "• Assumes parameters of reference distribution known (unless corrected)\n"
-            "• Less sensitive than Shapiro–Wilk for tail deviations\n"
+            "• Assumes parameters of reference distribution are known (unless corrected)\n"
+            "• Less sensitive than Shapiro–Wilk for tail deviations"
         ),
-        "formula": (
-        r"D = \max_x |F_n(x) - F(x)|",
-         ),
-        "citation": "Kolmogorov (1933); Smirnov (1939).",
-        "image": "ks_test.png"
-    },
+        formula=r"D = \max_x |F_n(x) - F(x)|",
+        citation="Kolmogorov (1933); Smirnov (1939).",
+        image="Kolmogorov_eq.PNG"
+    ),
+
     # --------------------------------------------------------------------
-    # EXAMPLE 2 — Q-Q PLOT
+    # Q–Q Plot
     # --------------------------------------------------------------------
-    "Q–Q Plot": {
-        "description": "A graphical method to check if data follows a normal distribution.",
-        "interpretation": (
-            "• Points on a straight line → normality holds\n"
-            "• S-shaped curve → skewness present\n"
-            "• Deviations at ends → heavy or light tails\n"
+    "Q–Q Plot": make_method(
+        description="A graphical method to check whether data follows a normal distribution.",
+        interpretation=(
+            "• Points on a straight line → normality is plausible\n"
+            "• S-shaped curve → skewness may be present\n"
+            "• Deviations at ends → heavy or light tails"
         ),
-        "limitations": (
+        limitations=(
             "• Subjective assessment\n"
             "• Hard to interpret with very large datasets\n"
-            "• Outliers strongly influence the visual appearance\n"
+            "• Outliers strongly influence the visual appearance"
         ),
-        "formula": "No formula (graphical method).",
-        "rules": ["Look for deviations in tails", "S-shape → skewness"],
-        "example": "Example: upward deviation in right tail → right skew.",
-        "citation": "Wilk & Gnanadesikan (1968). Biometrika.",
-        "image": "qqplot.png"
-    },
-
-    # --------------------------------------------------------------------
-    # EXAMPLE 3 — HISTOGRAM
-    # --------------------------------------------------------------------
-    "Histogram": {
-        "description": "Basic visual distribution check.",
-    "interpretation": (
-        "• Bell-shaped curve → suggests normality\n"
-        "• Skewed or multi-modal shapes → deviations from normality\n"
+        formula="No formula (graphical method).",
+        example="Example: upward deviation in the right tail → right-skewed data.",
+        citation="Wilk & Gnanadesikan (1968). Biometrika.",
+        image="Q_Q_plot_1.png"
     ),
-    "limitations": (
-        "• Highly sensitive to bin size\n"
-        "• Only a visual guide, not a formal statistical test\n"
+
+    # --------------------------------------------------------------------
+    # Histogram
+    # --------------------------------------------------------------------
+    "Histogram": make_method(
+        description="Basic visual method for checking distribution shape.",
+        interpretation=(
+            "• Bell-shaped curve → suggests approximate normality\n"
+            "• Skewed or multi-modal shapes → indicate deviation from normality"
+        ),
+        limitations=(
+            "• Highly sensitive to bin width\n"
+            "• Only a visual guide, not a formal statistical test"
+        ),
+        formula="No formula.",
+        example="Example: an uneven shape may suggest skewness or multiple populations.",
+        citation="Cleveland (1985). The Elements of Graphing Data.",
+        image="Histogram_1.png"
     ),
-        "formula": "No formula.",
-        "rules": ["Bin size affects interpretation", "Used for quick inspection"],
-        "example": "Example: uneven shape → skewness.",
-        "citation": "Cleveland (1985). The Elements of Graphing Data.",
-        "image": "histogram.png"
-    },
 
-
-  # EXAMPLE 3 — Box-plot
-# "interpretation": (
-#     "• Symmetric box and whiskers → approximate normality\n"
-#     "• Long whisker → skewness\n"
-#     "• Outliers appear as individual points\n"
-# ),
-# "limitations": (
-#     "• Does not show distribution shape\n"
-#     "• Cannot confirm normality alone\n"
-# ),
-
-
-    # --------------------------------------------------------------------
-    # EXAMPLE 4 — MARDIA SKEWNESS
-    # --------------------------------------------------------------------
-    "Mardia Skewness": {
-        "description": "Measures multivariate skewness in multivariate normality testing.",
-        "formula": r"b_{1,p} = \frac{1}{n^2}\sum_{i,j}[(x_i-\bar{x})^TS^{-1}(x_j-\bar{x})]^3",
-        "rules": ["Requires covariance matrix invertibility", "Sensitive to multivariate outliers"],
-        "interpretation": ["Large value → violates multivariate normality"],
-        "example": "Example: b₁ₚ > χ² critical value → reject normality.",
-        "citation": "Mardia (1970). Biometrika.",
-        "image": "mardia.png"
-    },
 
     # --------------------------------------------------------------------
     # Gamma Plot
-    # --------------------------------------------------------------------    
-    "Gamma Plot": {
-    "description": (
-        "A Gamma plot is a multivariate graphical technique that evaluates "
-        "whether the squared Mahalanobis distances follow a linear trend. "
-        "Used for diagnosing multivariate normality."
+    # --------------------------------------------------------------------
+    "Gamma Plot": make_method(
+        description=(
+            "A Gamma plot is a multivariate graphical technique that evaluates "
+            "whether the squared Mahalanobis distances follow a linear trend. "
+            "It is used for diagnosing multivariate normality."
+        ),
+        interpretation=(
+            "• Linear pattern in ordered Mahalanobis distances → multivariate normality likely\n"
+            "• Curved pattern → deviation from multivariate normality"
+        ),
+        limitations=(
+            "• Requires stable estimation of the covariance matrix\n"
+            "• Sensitive to outliers and high dimensionality"
+        ),
+        formula=(
+            r"D^2 = (x - \bar{x})^T S^{-1} (x - \bar{x})" "\n"
+            "A linear trend in ordered D² values suggests multivariate normality."
+        ),
+        citation="Mardia (1970); Gnanadesikan (1977). Methods for Statistical Data Analysis.",
+        image="_"
     ),
-    "interpretation": (
-        "• Linear pattern in ordered Mahalanobis distances → multivariate normality likely\n"
-        "• Curved pattern → deviation from multivariate normality\n"
-    ),
-    "limitations": (
-        "• Requires stable estimation of covariance matrix\n"
-        "• Sensitive to outliers and high-dimensionality\n"
-    ),
-    "formula": (
-        r"D^2 = (x - \bar{x})^T S^{-1} (x - \bar{x}) \n"
-        "A linear trend in ordered D² values suggests multivariate normality."
-    ),
-    "citation": "Mardia (1970); Gnanadesikan (1977). Methods for Statistical Data Analysis.",
-    "image": "gamma_plot.png"
-},    
-    
+
     # --------------------------------------------------------------------
     # Chi-Square Q–Q Plot
-    # --------------------------------------------------------------------       
-    "Chi-Square Q–Q Plot": {
-    "description": (
-        "Plots ordered Mahalanobis distances against theoretical chi-square "
-        "quantiles. If points fall on a straight line, multivariate normality "
-        "is plausible."
+    # --------------------------------------------------------------------
+    "Chi-Square Q–Q Plot": make_method(
+        description=(
+            "Plots ordered Mahalanobis distances against theoretical chi-square "
+            "quantiles. If points fall on a straight line, multivariate normality "
+            "is plausible."
+        ),
+        interpretation=(
+            "• Points on the diagonal line → data may follow multivariate normality\n"
+            "• Systematic deviations → skewness, kurtosis, or covariance structure issues"
+        ),
+        limitations=(
+            "• Depends heavily on reliable covariance estimation\n"
+            "• Outliers can distort the plot strongly"
+        ),
+        formula=(
+            r"D^2_i = (x_i - \bar{x})^T S^{-1} (x_i - \bar{x})" "\n"
+            r"Compare ordered D² values to χ²(p) quantiles."
+        ),
+        citation="Rencher & Christensen (2012). Methods of Multivariate Analysis.",
+        image="Chi_sqplot_1.png"
     ),
-    "interpretation": (
-    "• Points on diagonal line → data follows multivariate normality\n"
-    "• Systematic deviations → skewness, kurtosis, or correlation structure issues\n"
-    ),
-    "limitations": (
-        "• Depends heavily on reliable covariance estimation\n"
-        "• Outliers distort the plot drastically\n"
-    ),
-        "formula": (
-        r"D^2_i = (x_i - \bar{x})^T S^{-1} (x_i - \bar{x}) \n"
-        r"Compare ordered D² values to χ²(p) quantiles."
-    ),
-    "citation": "Rencher & Christensen (2012). Methods of Multivariate Analysis.",
-    "image": "chi_square_qq.png"
-},
-    
+
     # --------------------------------------------------------------------
     # Multivariate Q–Q Plot
-    # --------------------------------------------------------------------       
-    "Multivariate Q–Q Plot": {
-    "description": (
-        "Generalized Q–Q plot comparing the empirical distribution of "
-        "Mahalanobis distances to a theoretical chi-square distribution. "
-        "Used for assessing multivariate normality."
+    # --------------------------------------------------------------------
+    "Multivariate Q–Q Plot": make_method(
+        description=(
+            "A generalized Q–Q plot comparing the empirical distribution of "
+            "Mahalanobis distances to a theoretical chi-square distribution. "
+            "Used for assessing multivariate normality."
+        ),
+        interpretation=(
+            "• Close fit to the diagonal → supports multivariate normality\n"
+            "• Deviations in the upper tail → heavy tails or multivariate outliers"
+        ),
+        limitations=(
+            "• Requires adequate sample size relative to dimensionality\n"
+            "• Visual method with subjective interpretation"
+        ),
+        formula=(
+            r"D^2 = (x - \bar{x})^T S^{-1} (x - \bar{x})" "\n"
+            "Points close to the diagonal indicate multivariate normality."
+        ),
+        citation="Li (1991). Multivariate Q–Q Plots for Assessing Normality.",
+        image="_"
     ),
-    "interpretation": (
-    "• Close fit to diagonal → supports multivariate normal assumption\n"
-    "• Deviations at upper tail → heavy tails or multivariate outliers\n"
-    ),
-    "limitations": (
-        "• Requires adequate sample size relative to dimensionality\n"
-        "• Visual method — subjective interpretation\n"
-    ),
-    "formula": (
-        r"D^2 = (x - \bar{x})^T S^{-1} (x - \bar{x}) \n"
-        "Points close to the diagonal indicate multivariate normality."
-    ),
-    "citation": "Li (1991). Multivariate Q–Q Plots for Assessing Normality.",
-    "image": "mv_qqplot.png"
-},
-    
+
     # --------------------------------------------------------------------
     # Mardia’s skewness
-    # --------------------------------------------------------------------        
-    "Mardia’s skewness": {
-    "description": (
-        "Mardia’s multivariate skewness measures the departure from symmetry "
-        "in a multivariate distribution. Large skewness indicates deviation "
-        "from multivariate normality."
+    # --------------------------------------------------------------------
+    "Mardia’s skewness": make_method(
+        description=(
+            "Mardia’s multivariate skewness measures the departure from symmetry "
+            "in a multivariate distribution. Large skewness indicates deviation "
+            "from multivariate normality."
+        ),
+        interpretation=(
+            "• High b₁ₚ value → substantial multivariate skewness\n"
+            "• p < 0.05 → reject multivariate normality"
+        ),
+        limitations=(
+            "• Very sensitive to outliers\n"
+            "• Requires an invertible covariance matrix\n"
+            "• Not reliable for very small samples"
+        ),
+        formula=(
+            r"b_{1,p} = \frac{1}{n^2}\sum_{i=1}^{n}\sum_{j=1}^{n}"
+            r"[(x_i - \bar{x})^T S^{-1}(x_j - \bar{x})]^3"
+        ),
+        citation="Mardia, K.V. (1970). Wulandari et al., (2021)",
+        image="M_Skewness_1.png"
     ),
-    "interpretation": (
-    "• High b₁ₚ value → significant multivariate skewness\n"
-    "• p < 0.05 → reject multivariate normality\n"
-    ),
-    "limitations": (
-        "• Very sensitive to outliers\n"
-        "• Requires invertible covariance matrix\n"
-        "• Not reliable for small sample sizes\n"
-    ),
-    "formula": (
-        r"b_{1,p} = \frac{1}{n^2}\sum_{i=1}^{n}\sum_{j=1}^{n} "
-        r"[(x_i - \bar{x})^T S^{-1}(x_j - \bar{x})]^3"
-    ),
-    "citation": "Mardia, K.V. (1970). Measures of multivariate skewness and kurtosis.",
-    "image": "mardia_skew.png"
-},    
-    
+
     # --------------------------------------------------------------------
     # Mardia’s kurtosis
-    # --------------------------------------------------------------------  
-    "Mardia’s kurtosis": {
-    "description": (
-        "Mardia’s multivariate kurtosis evaluates how heavy-tailed the "
-        "multivariate distribution is. Excess kurtosis indicates significant "
-        "departure from multivariate normality."
-    ),
-    "interpretation": (
-    "• b₂ₚ > expected value → heavy tails\n"
-    "• b₂ₚ < expected value → light tails\n"
-    "• Significant deviation → reject multivariate normality\n"
-    ),
-    "limitations": (
-        "• Sensitive to deviations in higher-order moments\n"
-        "• Requires adequate sample size (n > p)\n"
-    ),
-    "formula": (
-        r"b_{2,p} = \frac{1}{n}\sum_{i=1}^{n} "
-        r"[(x_i - \bar{x})^T S^{-1}(x_i - \bar{x})]^2"
-    ),
-    "citation": "Mardia, K.V. (1970). Measures of multivariate skewness and kurtosis.",
-    "image": "mardia_kurtosis.png"
-},
-    
-    
-    # --------------------------------------------------------------------    
-    # PEARSON CORRELATION
     # --------------------------------------------------------------------
-    "Pearson's correlation": {
-    "description": (
-        "Pearson's correlation coefficient (r) measures the strength and "
-        "direction of a linear relationship between two continuous variables.\n\n"
-        "Assumptions:\n"
-        "• Variables are normally distributed\n"
-        "• Relationship is linear\n"
-        "• No extreme outliers\n"
-    ),
-    "interpretation": (
-    "• r close to +1 → strong positive linear relationship\n"
-    "• r close to -1 → strong negative linear relationship\n"
-    "• r ≈ 0 → no linear relationship\n"
-    "• p-value tests whether the linear relationship is statistically significant\n"
-    ),
-    "limitations": (
-        "• Only detects linear relationships\n"
-        "• Highly sensitive to outliers\n"
-        "• Requires variables to be approximately normal\n"
-    ),
-    "formula": r"r = \frac{\sum (x - \bar{x})(y - \bar{y})}{\sqrt{\sum (x - \bar{x})^2 \sum (y - \bar{y})^2}}",
-    "citation": "Pearson, K. (1895). Proceedings of the Royal Society of London.",
-    "image": "pearson.png"
-},
-    # --------------------------------------------------------------------
-    # SPEARMAN CORRELATION 
-    # --------------------------------------------------------------------
-    "Spearman's correlation": {
-    "description": (
-        "Spearman's rank correlation (ρ) measures monotonic relationships "
-        "between two variables. It does NOT require normality and is robust "
-        "to outliers.\n\n"
-        "When to use:\n"
-        "• Data not normally distributed\n"
-        "• Relationship is monotonic but not necessarily linear\n"
-        "• Variables are ordinal or ranked"
-    ),
-    "interpretation": (
-    "• ρ close to +1 or -1 → strong monotonic relationship\n"
-    "• ρ ≈ 0 → no monotonic relationship\n"
-    "• Works for non-normal and ordinal data\n"
-    ),
-    "limitations": (
-        "• Does not detect non-monotonic nonlinear patterns\n"
-        "• Ties in ranked data reduce precision\n"
-    ),
-    "formula": r"ρ = 1 - \frac{6\sum d_i^2}{n(n^2 - 1)}",
-    "citation": "Spearman, C. (1904). The American Journal of Psychology.",
-    "image": "spearman.png"
-},
-
-    # ====================================================================
-    # NEW: PCA / FA / PMF DETAILS
-    # ====================================================================
-
-    "Principal Component\nAnalysis": {
-        "description": "Principal Component Analysis (PCA) reduces dimensionality by maximizing variance.\n\n"
-                       "When to use:\n"
-                       "• You want to summarize many correlated variables\n"
-                       "• You want orthogonal components\n"
-                       "• You assume linear relationships\n",
-        "interpretation": (
-            "• High loadings indicate strong influence of variables on components\n"
-            "• PC1 explains the largest variance in the dataset\n"
+    "Mardia’s kurtosis": make_method(
+        description=(
+            "Mardia’s multivariate kurtosis evaluates how heavy-tailed the "
+            "multivariate distribution is. Excess kurtosis indicates departure "
+            "from multivariate normality."
         ),
-        "limitations": (
+        interpretation=(
+            "• b₂ₚ > expected value → heavy tails\n"
+            "• b₂ₚ < expected value → light tails\n"
+            "• Significant deviation → reject multivariate normality"
+        ),
+        limitations=(
+            "• Sensitive to higher-order moment deviations\n"
+            "• Requires adequate sample size (n > p)"
+        ),
+        formula=(
+            r"b_{2,p} = \frac{1}{n}\sum_{i=1}^{n}"
+            r"[(x_i - \bar{x})^T S^{-1}(x_i - \bar{x})]^2"
+        ),
+        citation="Mardia, K.V. (1970); Wulandari et al., (2021)",
+        image="M_Kurtosis_1.png"
+    ),
+
+    # --------------------------------------------------------------------
+    # Pearson correlation
+    # --------------------------------------------------------------------
+    "Pearson's correlation": make_method(
+        description=(
+            "Pearson's correlation coefficient (r) measures the strength and "
+            "direction of a linear relationship between two continuous variables.\n\n"
+            "Assumptions:\n"
+            "• Variables are approximately normally distributed\n"
+            "• Relationship is linear\n"
+            "• No extreme outliers"
+        ),
+        interpretation=(
+            "• r close to +1 → strong positive linear relationship\n"
+            "• r close to -1 → strong negative linear relationship\n"
+            "• r ≈ 0 → no linear relationship\n"
+            "• p-value tests whether the relationship is statistically significant"
+        ),
+        limitations=(
+            "• Only detects linear relationships\n"
+            "• Highly sensitive to outliers\n"
+            "• Requires approximate normality for standard inference"
+        ),
+        formula=r"r = \frac{\sum (x - \bar{x})(y - \bar{y})}{\sqrt{\sum (x - \bar{x})^2 \sum (y - \bar{y})^2}}",
+        citation="Pearson, K. (1895). Proceedings of the Royal Society of London.",
+        image="_"
+    ),
+
+    # --------------------------------------------------------------------
+    # Spearman correlation
+    # --------------------------------------------------------------------
+    "Spearman's correlation": make_method(
+        description=(
+            "Spearman's rank correlation (ρ) measures monotonic relationships "
+            "between two variables. It does not require normality and is more "
+            "robust to outliers than Pearson’s correlation.\n\n"
+            "Used when:\n"
+            "• Data are not normally distributed\n"
+            "• Relationship is monotonic but not necessarily linear\n"
+            "• Variables are ordinal or ranked"
+        ),
+        interpretation=(
+            "• ρ close to +1 or -1 → strong monotonic relationship\n"
+            "• ρ ≈ 0 → no monotonic relationship\n"
+            "• Useful for non-normal and ordinal data"
+        ),
+        limitations=(
+            "• Does not detect non-monotonic nonlinear patterns\n"
+            "• Ties in ranks can reduce precision"
+        ),
+        formula=r"ρ = 1 - \frac{6\sum d_i^2}{n(n^2 - 1)}",
+        citation="Spearman, C. (1904). The American Journal of Psychology.",
+        image="_"
+    ),
+
+    # --------------------------------------------------------------------
+    # PCA
+    # --------------------------------------------------------------------
+    "Principal Component\nAnalysis": make_method(
+        description=(
+            "Principal Component Analysis (PCA) reduces dimensionality by transforming "
+            "correlated variables into a smaller set of orthogonal components.\n\n"
+            "Used when:\n"
+            "• You want to summarise many correlated variables\n"
+            "• You want orthogonal components\n"
+            "• You assume mainly linear relationships"
+        ),
+        interpretation=(
+            "• High loadings indicate strong influence of variables on components\n"
+            "• PC1 explains the largest proportion of variance"
+        ),
+        limitations=(
             "• Only captures linear structure\n"
             "• Sensitive to variable scaling\n"
-            "• Sensitive to outliers\n"),
-        "formula": r"Z = XW \quad \text{(eigenvectors of covariance matrix)}",
-        "citation": "Jolliffe (2002). Principal Component Analysis.",
-        "image": "pca.png"
-    },
-
-    "Factor Analysis": {
-        "description": "Factor Analysis (FA) models latent variables that explain observed correlations.\n\n"
-                       "When to use:\n"
-                       "• You want to identify underlying factors\n"
-                       "• Shared variance is more important than total variance",
-        "interpretation": (
-            "• Factors represent latent constructs underlying correlations\n"
-            "• High communalities → variables well explained\n"
+            "• Sensitive to outliers"
         ),
-        "limitations": (
-            "• Requires large sample size (often n > 100)\n"
+        formula=r"Z = XW \quad \text{(eigenvectors of covariance/correlation matrix)}",
+        citation="Jolliffe (2002). Principal Component Analysis.",
+        image="_"
+    ),
+
+    # --------------------------------------------------------------------
+    # Factor Analysis
+    # --------------------------------------------------------------------
+    "Factor Analysis": make_method(
+        description=(
+            "Factor Analysis (FA) models latent variables that explain observed "
+            "correlations among measured variables.\n\n"
+            "Used when:\n"
+            "• You want to identify underlying latent factors\n"
+            "• Shared variance is more important than total variance"
+        ),
+        interpretation=(
+            "• Factors represent latent constructs underlying the observed variables\n"
+            "• High communalities mean variables are well explained by the factor model"
+        ),
+        limitations=(
+            "• Requires sufficiently large sample size\n"
             "• Factor rotation introduces subjectivity\n"
-            "• Model fit can be poor if data violate assumptions\n"
+            "• Model fit can be poor if assumptions are violated"
         ),
-        "formula": r"X = \Lambda F + \epsilon",
-        "citation": "Fabrigar et al. (1999). Psychological Methods.",
-        "image": "fa.png"
-    },
-        # ---------------- DISCRIMINANT ANALYSIS ----------------
-    "Discriminant Analysis": {
-        "description": (
-            "Discriminant Analysis finds linear combinations of predictors that best separate predefined groups.\n\n"
-            "Used when:\n"
-            "• Groups are known (supervised)\n"
-            "• Goal is classification or group prediction"
-        ),
-        "interpretation": (
-            "• Positive or negative discriminant scores indicate group separation\n"
-            "• Classification accuracy indicates predictive performance\n"
-        ),
-        "limitations": (
-            "• Assumes multivariate normality of predictors\n"
-            "• Classes must have similar covariance matrices\n"
-            "• Sensitive to outliers\n"
-        ),
-        "formula": r"D = w_1x_1 + w_2x_2 + \dots + w_px_p",
-        "citation": "Fisher (1936). Annals of Eugenics.",
-        "image": "da.png"
-    },
-    
-        # ---------------- HIERARCHICAL CLUSTER ANALYSIS ----------------
-    "Hierarchical\nCluster Analysis": {
-        "description": (
-            "HCA builds nested clusters using distance-based or linkage-based algorithms.\n\n"
-            "Used when:\n"
-            "• You want tree-like structure (dendrogram)\n"
-            "• Number of clusters not known in advance"
-        ),
-        "interpretation": (
-            "• Dendrogram shows group structure\n"
-            "• Height of fusion → cluster similarity\n"
-        ),
-        "limitations": (
-            "• Sensitive to scaling of variables\n"
-            "• Different linkage methods can give different results\n"
-            "• Cannot revise earlier merge decisions\n"
-        ),
-        "formula": "Distance metrics like Euclidean; linkage methods such as Ward's or complete linkage.",
-        "citation": "Ward (1963). Journal of the American Statistical Association.",
-        "image": "hca.png"
-    },
+        formula=r"X = \Lambda F + \epsilon",
+        citation="Fabrigar et al. (1999). Psychological Methods.",
+        image="_"
+    ),
 
-    "PMF": {
-        "description": "Positive Matrix Factorization (PMF) is widely used in environmental sciences.\n\n"
-                       "When to use:\n"
-                       "• Source apportionment of pollutants\n"
-                       "• Chemical compositional data\n"
-                       "• Non-negative constraints required",
-        "interpretation": (
+    # --------------------------------------------------------------------
+    # Discriminant Analysis
+    # --------------------------------------------------------------------
+    "Discriminant Analysis": make_method(
+        description=(
+            "Discriminant Analysis finds linear combinations of predictors that best "
+            "separate predefined groups.\n\n"
+            "Used when:\n"
+            "• Groups are known in advance (supervised setting)\n"
+            "• The goal is classification or group prediction"
+        ),
+        interpretation=(
+            "• Discriminant scores indicate separation among groups\n"
+            "• Classification accuracy indicates predictive performance"
+        ),
+        limitations=(
+            "• Assumes multivariate normality of predictors\n"
+            "• Often assumes similar covariance matrices across groups\n"
+            "• Sensitive to outliers"
+        ),
+        formula=r"D = w_1x_1 + w_2x_2 + \dots + w_px_p",
+        citation="Fisher (1936). Annals of Eugenics.",
+        image="_"
+    ),
+
+    # --------------------------------------------------------------------
+    # Hierarchical Cluster Analysis
+    # --------------------------------------------------------------------
+    "Hierarchical\nCluster Analysis": make_method(
+        description=(
+            "Hierarchical Cluster Analysis (HCA) builds nested clusters using "
+            "distance-based and linkage-based algorithms.\n\n"
+            "Used when:\n"
+            "• You want a dendrogram structure\n"
+            "• The number of clusters is not known in advance"
+        ),
+        interpretation=(
+            "• The dendrogram shows grouping structure\n"
+            "• Fusion height reflects cluster similarity or dissimilarity"
+        ),
+        limitations=(
+            "• Sensitive to scaling of variables\n"
+            "• Different linkage methods may give different results\n"
+            "• Earlier merge decisions cannot be revised"
+        ),
+        formula="Distance metrics such as Euclidean distance; linkage methods such as Ward's or complete linkage.",
+        citation="Ward (1963). Journal of the American Statistical Association.",
+        image="_"
+    ),
+
+    # --------------------------------------------------------------------
+    # Positive matrix factorization
+    # --------------------------------------------------------------------
+    "Positive Matrix\nFactorization": make_method(
+        description=(
+            "Positive Matrix Factorization (PMF) is widely used in environmental "
+            "sciences for source apportionment of compositional data.\n\n"
+            "Used when:\n"
+            "• You need source apportionment of pollutants\n"
+            "• You work with chemical compositional data\n"
+            "• Non-negative constraints are required"
+        ),
+        interpretation=(
             "• Factors represent source profiles\n"
-            "• Contribution values indicate source strengths over samples\n"
+            "• Contribution values indicate source strengths across samples"
         ),
-        "limitations": (
-            "• Factor number selection subjective\n"
+        limitations=(
+            "• Choosing the number of factors can be subjective\n"
             "• Rotational ambiguity affects stability\n"
-            "• Requires accurate uncertainty estimates\n"
-            "• Sensitive to collinearity in species data\n"
+            "• Requires reasonable uncertainty estimates\n"
+            "• Sensitive to collinearity among variables"
         ),
-        "formula": r"X = GF + E",
-        "citation": "Paatero & Tapper (1994). Environmetrics.",
-        "image": "pmf.png"
-    }
+        formula=r"X = GF + E",
+        citation="Paatero & Tapper (1994). Environmetrics.",
+        image="_"
+    ),
 }
 
 # ========================================================================
-# PART 3 — INITIAL ELEMENTS (ROOT NODE)
+# PART 3 — INITIAL ELEMENTS
 # ========================================================================
 
 elements = [
-    {"data": {"id": "root", "label": "Statistical\nDecision Tree"},
-     "position": {"x": 300, "y": 50}}
+    {
+        "data": {"id": "Exploratory Analysis", "label": "Exploratory\nAnalysis"},
+        "position": {"x": 300, "y": 50}
+    }
 ]
 
 expanded_nodes = set()
 
-
-
 # ========================================================================
-# PART 4 — EXPAND & COLLAPSE LOGIC
-# ========================================================================
-# 🎯 You do *not* need to edit this unless you change layout spacing.
-#
-# spacing = 170  → horizontal distance between nodes
-# child_y = +130 → vertical distance between levels
-#
-# If your tree gets wide, increase spacing.
-
-# ⭐ Note that you can UPDATED SPACING HERE ⭐
-# spacing (horizontal) → widened from 170 → 260
-# vertical spacing     → increased from 130 → 160
+# PART 4 — TREE HELPER FUNCTIONS
 # ========================================================================
 
 def toggle_node(node_id, current_elements):
@@ -680,27 +641,23 @@ def toggle_node(node_id, current_elements):
     if node_id in expanded_nodes:
         expanded_nodes.remove(node_id)
 
-        # recursively gather all descendants
-        def get_descendants(parent):
+        def collect_descendants(parent):
             children = tree.get(parent, [])
             all_desc = set(children)
             for child in children:
-                all_desc |= get_descendants(child)
+                all_desc |= collect_descendants(child)
             return all_desc
 
-        descendants = get_descendants(node_id)
+        descendants = collect_descendants(node_id)
 
         new_elements = []
         for el in current_elements:
             data = el.get("data", {})
 
-            # remove edges from parent or any descendant
             if data.get("source") in descendants or data.get("source") == node_id:
                 continue
             if data.get("target") in descendants:
                 continue
-
-            # remove nodes that are descendants
             if data.get("id") in descendants:
                 continue
 
@@ -713,11 +670,11 @@ def toggle_node(node_id, current_elements):
 
     parent_pos = None
     for el in current_elements:
-        if el["data"].get("id") == node_id:
+        if el.get("data", {}).get("id") == node_id:
             parent_pos = el["position"]
             break
+
     if parent_pos is None:
-        # Parent not yet rendered → skip expansion safely
         return current_elements
 
     parent_x, parent_y = parent_pos["x"], parent_pos["y"]
@@ -729,20 +686,31 @@ def toggle_node(node_id, current_elements):
 
     new_elements = current_elements.copy()
 
+    existing_node_ids = {
+        el.get("data", {}).get("id")
+        for el in new_elements
+        if "data" in el
+    }
+    existing_edges = {
+        (el.get("data", {}).get("source"), el.get("data", {}).get("target"))
+        for el in new_elements
+        if el.get("data", {}).get("source") and el.get("data", {}).get("target")
+    }
+
     for i, child in enumerate(children):
-        new_elements.append({
-            "data": {"id": child, "label": child},
-            "position": {"x": start_x + i * spacing, "y": child_y}
-        })
-        new_elements.append({
-            "data": {"source": node_id, "target": child}
-        })
+        if child not in existing_node_ids:
+            new_elements.append({
+                "data": {"id": child, "label": child},
+                "position": {"x": start_x + i * spacing, "y": child_y}
+            })
+
+        if (node_id, child) not in existing_edges:
+            new_elements.append({
+                "data": {"source": node_id, "target": child}
+            })
 
     return new_elements
 
-# ========================================================================
-# HELPER FUNCTIONS FOR TREE NAVIGATION
-# ========================================================================
 
 def get_ancestors(node):
     parents = []
@@ -762,9 +730,7 @@ def get_descendants(node):
     return all_desc
 
 # ========================================================================
-# PART 5 — THEMES (EDIT COLORS HERE)
-# ========================================================================
-# 🎨 To change color themes, modify LIGHT / DARK dictionaries.
+# PART 5 — THEMES
 # ========================================================================
 
 LIGHT = {
@@ -788,14 +754,92 @@ DARK = {
 }
 
 # ========================================================================
-# PART 6 — LAYOUT (PAGE STRUCTURE)
+# PART 6 — UI HELPERS
+# ========================================================================
+
+def method_selector():
+    return html.Div(
+        id="method-selector-box",
+        style={
+            "border": "1px solid #ccc",
+            "borderRadius": "8px",
+            "padding": "10px",
+            "marginBottom": "10px"
+        },
+        children=[
+            html.Div("Quick method selector", style={"fontWeight": "bold"}),
+
+            dcc.Dropdown(
+                id="method-group",
+                options=[{"label": k, "value": k} for k in METHOD_GROUPS],
+                placeholder="Select analysis level (Univariate / Bivariate / Multivariate)",
+                style={"marginBottom": "8px"}
+            ),
+
+            dcc.Dropdown(
+                id="method-name",
+                placeholder="Select method",
+            )
+        ]
+    )
+
+
+def build_info_panel(method_name):
+    if method_name not in node_details:
+        return html.H3(f"You selected: {method_name}")
+
+    d = node_details[method_name]
+
+    return html.Div(
+        children=[
+            html.Div(
+                children=[
+                    html.Button(
+                        "📘 Description", id="btn-desc", n_clicks=1,
+                        style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
+                    ),
+                    html.Button(
+                        "🔍 Interpretation", id="btn-interpret", n_clicks=0,
+                        style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
+                    ),
+                    html.Button(
+                        "⚠️ Limitations", id="btn-limit", n_clicks=0,
+                        style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
+                    ),
+                    html.Button(
+                        "🖼 Image", id="btn-image", n_clicks=0,
+                        style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
+                    ),
+                    html.Button(
+                        "📚 Citation", id="btn-citation", n_clicks=0,
+                        style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
+                    ),
+                ]
+            ),
+            html.Hr(),
+            html.Div(
+                id="content-panel",
+                children=html.Pre(
+                    d.get("description", ""),
+                    style={
+                        "whiteSpace": "pre-wrap",
+                        "fontFamily": "Times New Roman, Times, serif",
+                        "fontSize": "20px",
+                        "lineHeight": "1.6"
+                    }
+                )
+            )
+        ]
+    )
+
+# ========================================================================
+# PART 7 — LAYOUT
 # ========================================================================
 
 app.layout = html.Div(
     id="page-container",
     children=[
 
-        # ---------------- MathJax Support ----------------
         html.Script("""
         window.MathJax = {
             tex: {
@@ -810,10 +854,8 @@ app.layout = html.Div(
         html.Script(src="https://polyfill.io/v3/polyfill.min.js?features=es6"),
         html.Script(src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"),
 
-        # ---------------- Title ----------------
-        html.H1("📊 Statistical Framework for Water Quality Assessment"),
+        html.H1("📊 Decision Framework for Method Selection in Assessing Water Quality"),
 
-        # ---------------- User Guide Button ----------------
         html.Button(
             "📘 User's Guide",
             id="toggle-guide",
@@ -830,10 +872,8 @@ app.layout = html.Div(
         html.Div(
             id="guide-box",
             style={"display": "none"},
-        ),  # ← COMMA FIXED HERE
+        ),
 
-
-        # ---------------- Theme selector + Reset ----------------
         html.Div(
             style={
                 "display": "flex",
@@ -877,7 +917,6 @@ app.layout = html.Div(
             ]
         ),
 
-        # ---------------- Split Screen ----------------
         html.Div(
             style={
                 "display": "flex",
@@ -888,7 +927,6 @@ app.layout = html.Div(
             },
             children=[
 
-                # -------- LEFT: TREE --------
                 html.Div(
                     style={"width": "70%", "paddingRight": "15px"},
                     children=[
@@ -908,7 +946,6 @@ app.layout = html.Div(
                     ]
                 ),
 
-                # -------- RIGHT: INFO PANEL --------
                 html.Div(
                     id="info",
                     style={
@@ -919,12 +956,8 @@ app.layout = html.Div(
                         "fontSize": "20px"
                     },
                     children=[
-
-                        # Dynamic info content (filled by callbacks)
                         html.Div(id="info-content"),
-
                         html.Hr(),
-
                         html.Div(
                             style={
                                 "marginTop": "15px",
@@ -937,7 +970,6 @@ app.layout = html.Div(
             ]
         ),
 
-        # ---------------- Footer ----------------
         html.Hr(style={"marginTop": "20px", "opacity": 0.3}),
 
         html.Footer(
@@ -970,26 +1002,14 @@ app.layout = html.Div(
                         style={"textDecoration": "none"}
                     ),
                 ]),
-                html.Div("© 2026 Bedour Alsabti & co-authors. All rights reserved."),
+                html.Div("© 2026 Authors: Alsabti, B., Robinson, T., Sabarathinam, C., Viswanathan, P. M., & Wolff-Boenisch, D. All rights reserved."),
             ],
         ),
     ]
 )
+
 # ========================================================================
-# PART 7 — NODE CLICK CALLBACK (INFO TABS)
-# ========================================================================
-# 🎯 This controls what appears when a user clicks a test.
-#
-# To ADD a new tab:
-#   Insert a dcc.Tab(...) into the list.
-#
-# To REMOVE a tab:
-#   Delete that dcc.Tab(...) line.
-# ========================================================================
-# PART 7 — CLICK / DROPDOWN AUTO-FOCUS / RESET TREE
-# ========================================================================
-# ========================================================================
-# PART 7 — CLICK / DROPDOWN AUTO-FOCUS / RESET TREE (+ keep dropdown state)
+# PART 8 — MAIN TREE CALLBACK
 # ========================================================================
 
 @app.callback(
@@ -1011,16 +1031,16 @@ def click_or_autofocus(node, selected_method, reset_clicks):
 
     trigger = ctx.triggered[0]["prop_id"]
 
-# ==================================================
-# CASE 0 — RESET TREE (clear both dropdowns)
-# ==================================================
+    # --------------------------------------------------
+    # RESET TREE
+    # --------------------------------------------------
     if trigger == "reset-tree.n_clicks":
-
         elements = [
-            {"data": {"id": "root", "label": "Statistical\nDecision Tree"},
-            "position": {"x": 300, "y": 50}}
+            {
+                "data": {"id": "Exploratory Analysis", "label": "Exploratory\nAnalysis"},
+                "position": {"x": 300, "y": 50}
+            }
         ]
-
         expanded_nodes.clear()
 
         panel = html.Div(
@@ -1030,130 +1050,45 @@ def click_or_autofocus(node, selected_method, reset_clicks):
             ]
         )
 
-        return (
-            elements,
-            panel,
-            None,   # clear method-name
-            None    # clear method-group
-        )
-    # ==================================================
-    # CASE 1 — DROPDOWN SELECTED → AUTO-EXPAND + AUTO INFO
-    # ==================================================
-    if trigger == "method-name.value" and selected_method:
+        return elements, panel, None, None
 
-        # Reset tree structure
+    # --------------------------------------------------
+    # DROPDOWN SELECTED → AUTO-EXPAND + INFO
+    # --------------------------------------------------
+    if trigger == "method-name.value" and selected_method:
         elements = [
-            {"data": {"id": "root", "label": "Statistical\nDecision Tree"},
-            "position": {"x": 300, "y": 50}}
+            {
+                "data": {"id": "Exploratory Analysis", "label": "Exploratory\nAnalysis"},
+                "position": {"x": 300, "y": 50}
+            }
         ]
         expanded_nodes.clear()
 
-        # Expand valid ancestors only (top → down)
         ancestors = get_ancestors(selected_method)[::-1]
         for n in ancestors:
             elements = toggle_node(n, elements)
 
-        # Expand selected method node
-        elements = toggle_node(selected_method, elements)
+        if selected_method in tree:
+            elements = toggle_node(selected_method, elements)
 
-        # Auto-open info panel if available
-        if selected_method in node_details:
-            d = node_details[selected_method]
-
-            panel = html.Div(
-                children=[
-                    html.Div(
-                        children=[
-                            html.Button(
-                                "📘 Description", id="btn-desc", n_clicks=1,
-                                style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
-                            ),
-                            html.Button(
-                                "🔍 Interpretation", id="btn-interpret", n_clicks=0,
-                                style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
-                            ),
-                            html.Button(
-                                "⚠️ Limitations", id="btn-limit", n_clicks=0,
-                                style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
-                            ),
-                            html.Button(
-                                "🖼 Image", id="btn-image", n_clicks=0,
-                                style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
-                            ),
-                            html.Button(
-                                "📚 Citation", id="btn-citation", n_clicks=0,
-                                style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}
-                            ),
-                        ]
-                    ),
-                    html.Hr(),
-                    html.Div(
-                        id="content-panel",
-                        children=html.Pre(
-                            d.get("description", ""),
-                            style={
-                                "whiteSpace": "pre-wrap",
-                                "fontFamily": "Times New Roman, Times, serif",
-                                "fontSize": "20px",
-                                "lineHeight": "1.6"
-                            }
-                        )
-                    )
-                ]
-            )
-        else:
-            panel = html.H3(f"Focused on: {selected_method}")
+        panel = build_info_panel(selected_method)
 
         return elements, panel, dash.no_update, dash.no_update
-    # ==================================================
-    # CASE 2 — NODE CLICK → NORMAL EXPAND / COLLAPSE
-    # (DO NOT modify dropdowns)
-    # ==================================================
+
+    # --------------------------------------------------
+    # NODE CLICK → EXPAND / COLLAPSE
+    # --------------------------------------------------
     if trigger == "cy.tapNodeData" and node:
         node_id = node["id"]
         elements = toggle_node(node_id, elements)
 
-        if node_id not in node_details:
-            return elements, html.H3(f"You selected: {node_id}"), dash.no_update, dash.no_update
-
-        d = node_details[node_id]
-        panel = html.Div(
-            children=[
-                html.Div(
-                    children=[
-                        html.Button("📘 Description", id="btn-desc", n_clicks=1,
-                                    style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}),
-                        html.Button("🔍 Interpretation", id="btn-interpret", n_clicks=0,
-                                    style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}),
-                        html.Button("⚠️ Limitations", id="btn-limit", n_clicks=0,
-                                    style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}),
-                        html.Button("🖼 Image", id="btn-image", n_clicks=0,
-                                    style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}),
-                        html.Button("📚 Citation", id="btn-citation", n_clicks=0,
-                                    style={"marginBottom": "10px", "width": "100%", "fontSize": "18px"}),
-                    ]
-                ),
-                html.Hr(),
-                html.Div(
-                    id="content-panel",
-                    children=html.Pre(
-                        d.get("description", ""),
-                        style={
-                            "whiteSpace": "pre-wrap",
-                            "fontFamily": "Times New Roman, Times, serif",
-                            "fontSize": "20px",
-                            "lineHeight": "1.6"
-                        }
-                    )
-                )
-            ]
-        )
-
+        panel = build_info_panel(node_id)
         return elements, panel, dash.no_update, dash.no_update
 
     raise dash.exceptions.PreventUpdate
+
 # ========================================================================
-# PART 7B — INFO PANEL
+# PART 8B — INFO PANEL BUTTONS
 # ========================================================================
 
 @app.callback(
@@ -1164,15 +1099,13 @@ def click_or_autofocus(node, selected_method, reset_clicks):
     Input("btn-citation", "n_clicks"),
     Input("btn-image", "n_clicks"),
     Input("cy", "tapNodeData"),
-    Input("method-name", "value")       
+    Input("method-name", "value")
 )
 def update_panel(desc, interpret, limit, citation, image, node, selected_method):
-
     node_id = None
 
     if node and node["id"] in node_details:
         node_id = node["id"]
-
     elif selected_method and selected_method in node_details:
         node_id = selected_method
 
@@ -1182,8 +1115,7 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
     d = node_details[node_id]
     ctx = dash.callback_context.triggered_id
 
-    # ---------------- DESCRIPTION -----------------
-    if ctx == "btn-desc":
+    if ctx == "btn-desc" or ctx is None:
         return html.Pre(
             d.get("description", "No description available."),
             style={
@@ -1194,7 +1126,6 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
             }
         )
 
-    # ---------------- INTERPRETATION -----------------
     if ctx == "btn-interpret":
         return html.Pre(
             d.get("interpretation", "No interpretation available."),
@@ -1206,7 +1137,6 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
             }
         )
 
-    # ---------------- LIMITATIONS -----------------
     if ctx == "btn-limit":
         return html.Pre(
             d.get("limitations", "No limitations provided."),
@@ -1218,14 +1148,12 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
             }
         )
 
-    # ---------------- IMAGE -----------------
     if ctx == "btn-image":
         return html.Img(
             src="/assets/" + d.get("image", ""),
             style={"width": "90%", "marginTop": "15px"}
         )
 
-    # ---------------- CITATION -----------------
     if ctx == "btn-citation":
         return html.P(
             d.get("citation", "No citation available."),
@@ -1235,13 +1163,18 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
             }
         )
 
-    # Default fallback
     return html.Pre(
         d.get("description", ""),
-        style={"whiteSpace": "pre-wrap"}
+        style={
+            "whiteSpace": "pre-wrap",
+            "fontFamily": "Times New Roman, Times, serif",
+            "fontSize": "20px",
+            "lineHeight": "1.6"
+        }
     )
+
 # ========================================================================
-# PART 8 — THEME SWITCH CALLBACK
+# PART 9 — THEME SWITCH CALLBACK
 # ========================================================================
 
 @app.callback(
@@ -1253,7 +1186,6 @@ def update_panel(desc, interpret, limit, citation, image, node, selected_method)
     Input("method-name", "value")
 )
 def theme_and_highlight(mode, selected_method):
-
     theme = LIGHT if mode == "light" else DARK
 
     stylesheet = [
@@ -1277,10 +1209,15 @@ def theme_and_highlight(mode, selected_method):
                 "font-size": "22px",
             }
         },
-        {"selector": "edge", "style": {"line-color": theme["edge"], "width": 3}}
+        {
+            "selector": "edge",
+            "style": {
+                "line-color": theme["edge"],
+                "width": 3
+            }
+        }
     ]
 
-    # -------- Quick selector style --------
     selector_style = {
         "border": "1px solid #ccc",
         "borderRadius": "8px",
@@ -1290,7 +1227,6 @@ def theme_and_highlight(mode, selected_method):
         "color": theme["text"]
     }
 
-    # -------- Highlight subtree --------
     if selected_method:
         highlight_nodes = (
             [selected_method]
@@ -1339,8 +1275,9 @@ def theme_and_highlight(mode, selected_method):
     }
 
     return stylesheet, cy_style, page_style, selector_style
+
 # ========================================================================
-# USER GUIDE TOGGLE
+# PART 10 — USER GUIDE TOGGLE
 # ========================================================================
 
 @app.callback(
@@ -1350,7 +1287,6 @@ def theme_and_highlight(mode, selected_method):
     prevent_initial_call=True
 )
 def toggle_user_guide(n):
-
     if n % 2 == 1:
         return (
             html.Div(
@@ -1376,7 +1312,7 @@ def toggle_user_guide(n):
     return "", {"display": "none"}
 
 # ========================================================================
-# EXPORT SELECTED TREE (PNG)
+# PART 11 — EXPORT TREE
 # ========================================================================
 
 @app.callback(
@@ -1385,7 +1321,6 @@ def toggle_user_guide(n):
     prevent_initial_call=True
 )
 def export_tree(n):
-
     if not n:
         raise dash.exceptions.PreventUpdate
 
@@ -1396,7 +1331,7 @@ def export_tree(n):
     }
 
 # ========================================================================
-# Method selector
+# PART 12 — METHOD SELECTOR DROPDOWN
 # ========================================================================
 
 @app.callback(
@@ -1407,9 +1342,11 @@ def update_method_list(group):
     if not group:
         return []
     return [{"label": m.replace("\n", " "), "value": m} for m in METHOD_GROUPS[group]]
+
 # ========================================================================
-# PART 9 — RUN APP
+# PART 13 — RUN APP
 # ========================================================================
+
 if __name__ == "__main__":
     app.run(debug=True)
  
